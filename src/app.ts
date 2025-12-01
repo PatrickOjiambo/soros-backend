@@ -1,14 +1,14 @@
 import cors from "cors";
-import express from "express";
+import express, {Express} from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
-import type MessageResponse from "./interfaces/message-response.js";
+import type MessageResponse from "./interfaces/message-response";
 
-import api from "./api/index.js";
-import * as middlewares from "./middlewares.js";
+import api from "./api/index";
+import * as middlewares from "./middlewares";
 
-const app = express();
+const app: Express = express();
 
 app.use(morgan("dev"));
 app.use(helmet());

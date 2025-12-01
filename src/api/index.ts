@@ -1,10 +1,10 @@
-import express from "express";
+import express, {Router} from "express";
 
-import type MessageResponse from "../interfaces/message-response.js";
+import type MessageResponse from "../interfaces/message-response";
 
-import emojis from "./emojis.js";
+import emojis from "./emojis";
 
-const router = express.Router();
+const router: Router = express.Router();
 
 router.get<object, MessageResponse>("/", (req, res) => {
   res.json({

@@ -1,18 +1,30 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "commonjs",
+    "allowJs": true,
+    "skipLibCheck": true,
     "strict": true,
-    "noImplicitAny": true,
-    "outDir": "dist",
-    "sourceMap": true,
-    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noErrorTruncation": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "rootDir": "./",
+    "types": ["jest"],
+    "jsx": "react-jsx"
   },
   "include": [
-    "./*.js",
-    "src/**/*.ts",
-    "test/**/*.ts"
-  ]
+    "./**/*.ts",
+    "tests/**/*.test.ts",
+    "src/lib/emails/components/layout.tsx"
+  ],
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "experimentalSpecifierResolution": "node"
+  }
 }

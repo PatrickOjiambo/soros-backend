@@ -1,7 +1,7 @@
 import request from "supertest";
 import { describe, it } from "vitest";
 
-import app from "../src/app.js";
+import app from "../src/app";
 
 describe("GET /api/v1", () => {
   it("responds with a json message", () =>
