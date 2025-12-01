@@ -1,12 +1,13 @@
+import "dotenv/config";
 import { z } from "zod/v4";
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(5000),
+  MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
 });
 
 try {
-  // eslint-disable-next-line node/no-process-env
   envSchema.parse(process.env);
 }
 catch (error) {
