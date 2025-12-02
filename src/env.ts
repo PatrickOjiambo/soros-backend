@@ -1,10 +1,12 @@
 import "dotenv/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]),
   PORT: z.coerce.number().default(5000),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
+  JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters for security"),
+  JWT_EXPIRES_IN: z.string().default("7d"),
 });
 
 try {

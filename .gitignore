@@ -73,3 +73,8 @@ typings/
 .serverless
 
 dist
+# Ignore all Markdown files
+*.md
+
+# Except README.md
+!README.md
