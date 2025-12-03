@@ -125,3 +125,139 @@ userSchema.statics.findByEmail = function (email: string) {
 
 // Export the model
 export const User = mongoose.model<IUser>("User", userSchema);
+
+/**
+ * Indicator Interface
+ */
+export interface IIndicator extends Document {
+  name: string;
+  abbreviation: string;
+  category: "Trend" | "Momentum" | "Volatility" | "Volume";
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Indicator Schema
+ */
+const indicatorSchema = new Schema<IIndicator>(
+  {
+    name: {
+      type: String,
+      required: [true, "Indicator name is required"],
+      trim: true,
+      unique: true,
+    },
+    abbreviation: {
+      type: String,
+      required: [true, "Indicator abbreviation is required"],
+      trim: true,
+      uppercase: true,
+    },
+    category: {
+      type: String,
+      required: [true, "Indicator category is required"],
+      enum: {
+        values: ["Trend", "Momentum", "Volatility", "Volume"],
+        message: "Category must be one of: Trend, Momentum, Volatility, Volume",
+      },
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// Index for efficient queries
+indicatorSchema.index({ category: 1 });
+indicatorSchema.index({ name: 1 });
+
+export const Indicator = mongoose.model<IIndicator>("Indicator", indicatorSchema);
+
+/**
+ * Strategy Interface
+ */
+export interface IStrategy extends Document {
+  userId: mongoose.Types.ObjectId;
+  name: string;
+  description?: string;
+  indicators: mongoose.Types.ObjectId[];
+  timeframe: string;
+  amount: number;
+  status: "ACTIVE" | "INACTIVE";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Strategy Schema
+ */
+const strategySchema = new Schema<IStrategy>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "User ID is required"],
+      index: true,
+    },
+    name: {
+      type: String,
+      required: [true, "Strategy name is required"],
+      trim: true,
+      minlength: [3, "Strategy name must be at least 3 characters"],
+      maxlength: [100, "Strategy name cannot exceed 100 characters"],
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [1000, "Description cannot exceed 1000 characters"],
+    },
+    indicators: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Indicator",
+      },
+    ],
+    timeframe: {
+      type: String,
+      required: [true, "Timeframe is required"],
+      enum: {
+        values: ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"],
+        message: "Invalid timeframe",
+      },
+    },
+    amount: {
+      type: Number,
+      required: [true, "Amount is required"],
+      min: [1, "Amount must be at least 1"],
+      validate: {
+        validator: function (v: number) {
+          return v > 0;
+        },
+        message: "Amount must be positive",
+      },
+    },
+    status: {
+      type: String,
+      enum: {
+        values: ["ACTIVE", "INACTIVE"],
+        message: "Status must be either ACTIVE or INACTIVE",
+      },
+      default: "INACTIVE",
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// Indexes for efficient queries
+strategySchema.index({ userId: 1, status: 1 });
+strategySchema.index({ createdAt: -1 });
+
+export const Strategy = mongoose.model<IStrategy>("Strategy", strategySchema);
