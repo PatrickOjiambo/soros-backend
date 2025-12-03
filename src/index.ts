@@ -1,22 +1,19 @@
 import app from "./app";
 import { env } from "./env";
 import { connectDB, closeDBConnection } from "./db";
-import { emailService } from "./emails/email.util";
-import { email } from "zod";
 const port = env.PORT;
 
 const startServer = async () => {
   try {
-    emailService.testEmail();
     await connectDB();
     console.log("Database connected successfully.");
 
     const server = app.listen(port, () => {
+
       /* eslint-disable no-console */
       console.log(`Listening: http://localhost:${port}`);
       /* eslint-enable no-console */
     });
-
     server.on("error", (err) => {
       if ("code" in err && err.code === "EADDRINUSE") {
         console.error(`Port ${env.PORT} is already in use. Please choose another port or stop the process using it.`);

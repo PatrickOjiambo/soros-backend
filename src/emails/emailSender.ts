@@ -2,7 +2,7 @@ import { render } from "@react-email/render";
 import transporter from "./mailer";
 import React from "react";
 import logger from "../lib/logger";
-
+import { env } from "../env";
 interface SendEmailOptions {
   to: string;
   subject: string;
@@ -13,7 +13,7 @@ export const sendEmail = async ({ to, subject, react }: SendEmailOptions) => {
   const html = await render(react);
 
   const options = {
-    from: process.env.EMAIL_FROM,
+    from: env.EMAIL_FROM,
     to,
     subject,
     html,
