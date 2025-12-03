@@ -1,7 +1,6 @@
 import app from "./app";
 import { env } from "./env";
 import { connectDB, closeDBConnection } from "./db";
-
 const port = env.PORT;
 
 const startServer = async () => {
@@ -10,11 +9,11 @@ const startServer = async () => {
     console.log("Database connected successfully.");
 
     const server = app.listen(port, () => {
+
       /* eslint-disable no-console */
       console.log(`Listening: http://localhost:${port}`);
       /* eslint-enable no-console */
     });
-
     server.on("error", (err) => {
       if ("code" in err && err.code === "EADDRINUSE") {
         console.error(`Port ${env.PORT} is already in use. Please choose another port or stop the process using it.`);
