@@ -19,7 +19,8 @@
     "migrate": "pnpm drizzle-kit migrate",
     "studio": "pnpm drizzle-kit studio",
     "test": "jest",
-    "email": "email dev --dir src/lib/emails/templates -p 3001"
+    "email": "email dev --dir src/lib/emails/templates -p 3001",
+    "seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
     "@react-email/components": "^0.5.7",
