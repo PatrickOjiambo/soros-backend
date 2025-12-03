@@ -1,11 +1,13 @@
 import app from "./app";
 import { env } from "./env";
 import { connectDB, closeDBConnection } from "./db";
-
+import { emailService } from "./emails/email.util";
+import { email } from "zod";
 const port = env.PORT;
 
 const startServer = async () => {
   try {
+    emailService.testEmail();
     await connectDB();
     console.log("Database connected successfully.");
 

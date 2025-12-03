@@ -71,36 +71,6 @@ export const Layout = ({
               </Row>
             </Column>
 
-            {/* Column 2: Social Icons */}
-            {/* <Column align="right">
-              <Link href="/">
-                <Img
-                  src={`https://upload.wikimedia.org/wikipedia/commons/5/5a/X_icon_2.svg`}
-                  width="32"
-                  height="32"
-                  alt="X"
-                  className="inline ml-2"
-                />
-              </Link>
-              <Link href="/">
-                <Img
-                  src={`https://upload.wikimedia.org/wikipedia/commons/b/b9/2023_Facebook_icon.svg`}
-                  width="32"
-                  height="32"
-                  alt="Facebook"
-                  className="inline ml-2"
-                />
-              </Link>
-              <Link href="/">
-                <Img
-                  src={`https://upload.wikimedia.org/wikipedia/commons/e/e9/Linkedin_icon.svg`}
-                  width="32"
-                  height="32"
-                  alt="LinkedIn"
-                  className="inline ml-2"
-                />
-              </Link>
-            </Column> */}
           </Row>
         </Section>
 

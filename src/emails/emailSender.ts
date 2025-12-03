@@ -26,7 +26,7 @@ export const sendEmail = async ({ to, subject, react }: SendEmailOptions) => {
     );
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    logger.error(`Error sending email to ${to}:`, { error });
+    logger.error(`Error sending email to ${to}: ${ error }`);
 
     return { success: false, error };
   }
