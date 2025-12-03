@@ -7,6 +7,11 @@ const envSchema = z.object({
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters for security"),
   JWT_EXPIRES_IN: z.string().default("7d"),
+  EMAIL_FROM: z.email(),
+  EMAIL_SERVER_HOST: z.string().min(1),
+  EMAIL_SERVER_PORT: z.coerce.number(),
+  EMAIL_SERVER_USER: z.string().min(1),
+  EMAIL_SERVER_PASSWORD: z.string().min(1),
 });
 
 try {
