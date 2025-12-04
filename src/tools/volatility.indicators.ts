@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   atr,
   bollingerBands,
-  bollingerBandWidth,
+  bollingerBandsWidth,
   keltnerChannel,
   donchianChannel,
   chandelierExit,
@@ -205,7 +205,7 @@ export const bollingerBandWidthTool = createTool({
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const bbw = bollingerBandWidth(period, stdDev, close);
+      const bbw = bollingerBandsWidth(period, stdDev, close);
       const bandwidthValue = bbw[bbw.length - 1];
       const previousBBW = bbw[bbw.length - 2];
 

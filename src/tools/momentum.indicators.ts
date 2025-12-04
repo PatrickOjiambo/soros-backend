@@ -1,8 +1,8 @@
-import { createTool } from "@iqai/adk/tools";
+import { createTool } from "@iqai/adk";
 import { z } from "zod";
 import {
   rsi,
-  stochastic,
+  stochasticOscillator,
   williamsR,
   roc,
   awesomeOscillator,
@@ -41,7 +41,7 @@ export const rsiTool = createTool({
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const rsiValues = rsi(period, close);
+      const rsiValues = rsi(close, { period });
       const currentRsi = rsiValues[rsiValues.length - 1];
       const previousRsi = rsiValues[rsiValues.length - 2];
 
@@ -123,7 +123,7 @@ export const stochasticTool = createTool({
       const { high, low, close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const stochResult = stochastic(kPeriod, dPeriod, high, low, close);
+      const stochResult = stochasticOscillator(high, low, close, { kPeriod, dPeriod });
       const kValue = stochResult.k[stochResult.k.length - 1];
       const dValue = stochResult.d[stochResult.d.length - 1];
       const prevK = stochResult.k[stochResult.k.length - 2];
@@ -210,7 +210,7 @@ export const williamsRTool = createTool({
       const { high, low, close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const wrValues = williamsR(period, high, low, close);
+      const wrValues = williamsR( high, low, close, { period });
       const williamsRValue = wrValues[wrValues.length - 1];
       const previousWR = wrValues[wrValues.length - 2];
 
@@ -283,7 +283,7 @@ export const rocTool = createTool({
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const rocValues = roc(period, close);
+      const rocValues = roc( close, { period });
       const rocValue = rocValues[rocValues.length - 1];
       const previousRoc = rocValues[rocValues.length - 2];
 
@@ -355,7 +355,7 @@ export const awesomeOscillatorTool = createTool({
       const { high, low } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const aoValues = awesomeOscillator(shortPeriod, longPeriod, high, low);
+      const aoValues = awesomeOscillator( high, low, { slow: shortPeriod, fast: longPeriod });
       const aoValue = aoValues[aoValues.length - 1];
       const prevAO = aoValues[aoValues.length - 2];
       const prevAO2 = aoValues[aoValues.length - 3];
@@ -433,12 +433,12 @@ export const ppoTool = createTool({
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const ppoResult = ppo(fastPeriod, slowPeriod, signalPeriod, close);
-      const ppoValue = ppoResult.ppo[ppoResult.ppo.length - 1];
+      const ppoResult = ppo(close, {fast: fastPeriod, slow: slowPeriod, signal: signalPeriod});
+      const ppoValue = ppoResult.ppoResult[ppoResult.ppoResult.length - 1];
       const signalLine = ppoResult.signal[ppoResult.signal.length - 1];
       const histogram = ppoResult.histogram[ppoResult.histogram.length - 1];
 
-      const prevPPO = ppoResult.ppo[ppoResult.ppo.length - 2];
+      const prevPPO = ppoResult.ppoResult[ppoResult.ppoResult.length - 2];
       const prevSignal = ppoResult.signal[ppoResult.signal.length - 2];
       const bullishCrossover = prevPPO <= prevSignal && ppoValue > signalLine;
       const bearishCrossover = prevPPO >= prevSignal && ppoValue < signalLine;
