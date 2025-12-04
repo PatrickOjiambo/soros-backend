@@ -1,4 +1,4 @@
-import { createTool } from "@iqai/adk/tools";
+import { createTool } from "@iqai/adk";
 import { z } from "zod";
 import {
   ad,
@@ -120,7 +120,7 @@ export const chaikinMoneyFlowTool = createTool({
       const { high, low, close, volume } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const cmfValues = cmf(period, high, low, close, volume);
+      const cmfValues = cmf(high, low, close, volume, { period });
       const cmfValue = cmfValues[cmfValues.length - 1];
       const previousCMF = cmfValues[cmfValues.length - 2];
 
@@ -199,7 +199,7 @@ export const easeOfMovementTool = createTool({
       const { high, low, volume } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const emvValues = emv(period, high, low, volume);
+      const emvValues = emv( high, low, volume, { period });
       const emvValue = emvValues[emvValues.length - 1];
       const previousEMV = emvValues[emvValues.length - 2];
 
@@ -274,7 +274,7 @@ export const forceIndexTool = createTool({
       const { close, volume } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const fiValues = forceIndex(period, close, volume);
+      const fiValues = forceIndex( close, volume, { period });
       const forceValue = fiValues[fiValues.length - 1];
       const previousFI = fiValues[fiValues.length - 2];
 
@@ -356,7 +356,7 @@ export const moneyFlowIndexTool = createTool({
       const { high, low, close, volume } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const mfiValues = mfi(period, high, low, close, volume);
+      const mfiValues = mfi( high, low, close, volume, { period });
       const mfiValue = mfiValues[mfiValues.length - 1];
       const previousMFI = mfiValues[mfiValues.length - 2];
 
@@ -490,10 +490,10 @@ export const vwapTool = createTool({
     try {
       const { interval } = params;
       const limit = 100;
-      const { high, low, close, volume } = await getOHLCArrays(interval, limit);
+      const { close, volume } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const vwapValues = vwapIndicator(high, low, close, volume);
+      const vwapValues = vwapIndicator(close, volume);
       const vwapValue = vwapValues[vwapValues.length - 1];
       const currentPrice = close[close.length - 1];
       const previousVWAP = vwapValues[vwapValues.length - 2];
