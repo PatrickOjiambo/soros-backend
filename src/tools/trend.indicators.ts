@@ -1,12 +1,12 @@
-import { createTool } from "@adk/tools";
+import { createTool } from "@iqai/adk";
+
 import { z } from "zod";
 import {
   sma,
   ema,
   macd,
-  parabolicSar,
+  parabolicSAR,
   aroon,
-  adx,
   cci,
   vortex,
   dema,
@@ -54,7 +54,7 @@ export const simpleMovingAverageTool = createTool({
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const smaValues = sma(period, close);
+      const smaValues = sma(close, {period});
       const currentPrice = close[close.length - 1];
       const currentSma = smaValues[smaValues.length - 1];
       const previousSma = smaValues[smaValues.length - 2];
@@ -66,7 +66,7 @@ export const simpleMovingAverageTool = createTool({
 
       // Price position
       const priceAboveSma = currentPrice > currentSma;
-      const pricePosition = priceAboveSma ? "ABOVE" : "BELOW";
+      const pricePosition = priceAboveSma ? "ABOVE_SMA" : "BELOW_SMA";
 
       // Crossover detection
       const previousPrice = close[close.length - 2];
@@ -137,7 +137,7 @@ export const exponentialMovingAverageTool = createTool({
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const emaValues = ema(period, close);
+      const emaValues = ema(close, {period});
       const currentPrice = close[close.length - 1];
       const currentEma = emaValues[emaValues.length - 1];
       const previousEma = emaValues[emaValues.length - 2];
@@ -147,7 +147,7 @@ export const exponentialMovingAverageTool = createTool({
       else if (currentEma < previousEma) trend = "DOWNWARD";
 
       const priceAboveEma = currentPrice > currentEma;
-      const pricePosition = priceAboveEma ? "ABOVE" : "BELOW";
+      const pricePosition = priceAboveEma ? "ABOVE_EMA" : "BELOW_EMA";
 
       const previousPrice = close[close.length - 2];
       const bullishCrossover = previousPrice <= previousEma && currentPrice > currentEma;
@@ -192,6 +192,7 @@ export const exponentialMovingAverageTool = createTool({
         pricePosition,
         crossoverDetected,
         responsiveness: "HIGH",
+        momentum: bullishCrossover ? "ACCELERATING" : "DECELERATING"
       };
     } catch (error) {
       logger.error({ error, params }, "Error calculating EMA");
@@ -219,15 +220,16 @@ export const macdTool = createTool({
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const macdResult = macd(fastPeriod, slowPeriod, signalPeriod, close);
+      const macdResult = macd(close, {fast: fastPeriod, slow: slowPeriod, signal: signalPeriod, });
       const macdLine = macdResult.macdLine[macdResult.macdLine.length - 1];
       const signalLine = macdResult.signalLine[macdResult.signalLine.length - 1];
-      const histogram = macdResult.histogram[macdResult.histogram.length - 1];
-      const prevHistogram = macdResult.histogram[macdResult.histogram.length - 2];
-
-      // Crossover detection
+      const histogram = macdLine - signalLine;
       const prevMacd = macdResult.macdLine[macdResult.macdLine.length - 2];
       const prevSignal = macdResult.signalLine[macdResult.signalLine.length - 2];
+
+      const prevHistogram = prevMacd - prevSignal;
+
+      // Crossover detection
       const bullishCrossover = prevMacd <= prevSignal && macdLine > signalLine;
       const bearishCrossover = prevMacd >= prevSignal && macdLine < signalLine;
       const crossover = bullishCrossover ? "BULLISH" : bearishCrossover ? "BEARISH" : "NONE";
@@ -277,7 +279,7 @@ export const macdTool = createTool({
         histogram,
         crossover,
         divergence,
-        momentum,
+        trend: momentum === "BULLISH" ? "UPWARD" : momentum === "BEARISH" ? "DOWNWARD" : "NEUTRAL",
       };
     } catch (error) {
       logger.error({ error, params }, "Error calculating MACD");
@@ -304,12 +306,12 @@ export const parabolicSarTool = createTool({
       const { high, low, close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const sarValues = parabolicSar(accelerationFactor, maxAcceleration, high, low);
+      const sarValues = parabolicSAR( high, low, close, {step: accelerationFactor, max: maxAcceleration} );
       const currentPrice = close[close.length - 1];
-      const currentSar = sarValues[sarValues.length - 1];
-      const previousSar = sarValues[sarValues.length - 2];
+      const currentSar = sarValues.psarResult[sarValues.psarResult.length - 1];
+      const previousSar = sarValues.psarResult[sarValues.psarResult.length - 2];
 
-      const position = currentPrice > currentSar ? "ABOVE" : "BELOW";
+      const position = currentPrice > currentSar ? "ABOVE_PRICE" : "BELOW_PRICE";
       const previousPrice = close[close.length - 2];
       const reversalDetected =
         (previousPrice <= previousSar && currentPrice > currentSar) ||
@@ -318,26 +320,26 @@ export const parabolicSarTool = createTool({
       let signal: "BUY" | "SELL" | "HOLD" = "HOLD";
       let confidence: SignalStrength = "MODERATE";
 
-      if (reversalDetected && position === "ABOVE") {
+      if (reversalDetected && position === "ABOVE_PRICE") {
         signal = "BUY";
         confidence = "STRONG";
-      } else if (reversalDetected && position === "BELOW") {
+      } else if (reversalDetected && position === "BELOW_PRICE") {
         signal = "SELL";
         confidence = "STRONG";
-      } else if (position === "ABOVE" && currentSar < previousSar) {
+      } else if (position === "ABOVE_PRICE" && currentSar < previousSar) {
         signal = "BUY";
         confidence = "MODERATE";
-      } else if (position === "BELOW" && currentSar > previousSar) {
+      } else if (position === "BELOW_PRICE" && currentSar > previousSar) {
         signal = "SELL";
         confidence = "MODERATE";
       }
 
       const description = reversalDetected
         ? `Trend reversal detected! Price moved ${position.toLowerCase()} SAR level (${currentSar.toFixed(2)}). ${
-            position === "ABOVE" ? "Bullish" : "Bearish"
-          } trend likely starting. Consider ${position === "ABOVE" ? "buying" : "selling"}.`
+            position === "ABOVE_PRICE" ? "Bullish" : "Bearish"
+          } trend likely starting. Consider ${position === "ABOVE_PRICE" ? "buying" : "selling"}.`
         : `SAR at ${currentSar.toFixed(2)}, price ${position.toLowerCase()} at ${currentPrice.toFixed(2)}. ${
-            position === "ABOVE" ? "Uptrend" : "Downtrend"
+            position === "ABOVE_PRICE" ? "Uptrend" : "Downtrend"
           } continues. Use SAR as trailing stop-loss.`;
 
       return {
@@ -349,6 +351,8 @@ export const parabolicSarTool = createTool({
         position,
         reversalDetected,
         stopLossLevel: currentSar,
+        trend: position === "ABOVE_PRICE" ? "UPWARD" : "DOWNWARD",
+        currentPrice,
       };
     } catch (error) {
       logger.error({ error, params }, "Error calculating Parabolic SAR");
@@ -374,7 +378,7 @@ export const aroonTool = createTool({
       const { high, low } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const aroonResult = aroon(period, high, low);
+      const aroonResult = aroon( high, low, {period} );
       const aroonUp = aroonResult.up[aroonResult.up.length - 1];
       const aroonDown = aroonResult.down[aroonResult.down.length - 1];
       const oscillator = aroonUp - aroonDown;
@@ -443,77 +447,77 @@ export const aroonTool = createTool({
   },
 });
 
-/**
- * ADX (Average Directional Index) tool
- */
-export const adxTool = createTool({
-  name: "averageDirectionalIndex",
-  description: "Measures trend strength using ADX. Values above 25 indicate strong trends, below 20 suggest weak trends.",
-  schema: z.object({
-    period: z.number().min(5).max(50).default(14).describe("ADX period"),
-    interval: z.enum(["1m", "5m", "15m", "1h", "4h", "1d"]).default("15m"),
-  }),
-  fn: async (params): Promise<AverageDirectionalIndexResult> => {
-    try {
-      const { period, interval } = params;
-      const limit = period * 3;
-      const { high, low, close } = await getOHLCArrays(interval, limit);
-      const candles = await getMarketData(interval, limit);
+// /**
+//  * ADX (Average Directional Index) tool
+//  */
+// export const adxTool = createTool({
+//   name: "averageDirectionalIndex",
+//   description: "Measures trend strength using ADX. Values above 25 indicate strong trends, below 20 suggest weak trends.",
+//   schema: z.object({
+//     period: z.number().min(5).max(50).default(14).describe("ADX period"),
+//     interval: z.enum(["1m", "5m", "15m", "1h", "4h", "1d"]).default("15m"),
+//   }),
+//   fn: async (params): Promise<AverageDirectionalIndexResult> => {
+//     try {
+//       const { period, interval } = params;
+//       const limit = period * 3;
+//       const { high, low, close } = await getOHLCArrays(interval, limit);
+//       const candles = await getMarketData(interval, limit);
 
-      const adxResult = adx(period, high, low, close);
-      const adxValue = adxResult.adx[adxResult.adx.length - 1];
-      const plusDI = adxResult.pdi[adxResult.pdi.length - 1];
-      const minusDI = adxResult.mdi[adxResult.mdi.length - 1];
+//       const adxResult = adx(period, high, low, close);
+//       const adxValue = adxResult.adx[adxResult.adx.length - 1];
+//       const plusDI = adxResult.pdi[adxResult.pdi.length - 1];
+//       const minusDI = adxResult.mdi[adxResult.mdi.length - 1];
 
-      let strength: SignalStrength = "VERY_WEAK";
-      if (adxValue > 50) strength = "VERY_STRONG";
-      else if (adxValue > 25) strength = "STRONG";
-      else if (adxValue > 20) strength = "MODERATE";
-      else if (adxValue > 15) strength = "WEAK";
+//       let strength: SignalStrength = "VERY_WEAK";
+//       if (adxValue > 50) strength = "VERY_STRONG";
+//       else if (adxValue > 25) strength = "STRONG";
+//       else if (adxValue > 20) strength = "MODERATE";
+//       else if (adxValue > 15) strength = "WEAK";
 
-      let trend: TrendDirection = "NEUTRAL";
-      if (plusDI > minusDI && adxValue > 25) trend = "UPWARD";
-      else if (minusDI > plusDI && adxValue > 25) trend = "DOWNWARD";
+//       let trend: TrendDirection = "NEUTRAL";
+//       if (plusDI > minusDI && adxValue > 25) trend = "UPWARD";
+//       else if (minusDI > plusDI && adxValue > 25) trend = "DOWNWARD";
 
-      let signal: "BUY" | "SELL" | "HOLD" = "HOLD";
-      let confidence: SignalStrength = "WEAK";
+//       let signal: "BUY" | "SELL" | "HOLD" = "HOLD";
+//       let confidence: SignalStrength = "WEAK";
 
-      if (trend === "UPWARD" && strength === "STRONG") {
-        signal = "BUY";
-        confidence = "STRONG";
-      } else if (trend === "DOWNWARD" && strength === "STRONG") {
-        signal = "SELL";
-        confidence = "STRONG";
-      }
+//       if (trend === "UPWARD" && strength === "STRONG") {
+//         signal = "BUY";
+//         confidence = "STRONG";
+//       } else if (trend === "DOWNWARD" && strength === "STRONG") {
+//         signal = "SELL";
+//         confidence = "STRONG";
+//       }
 
-      const trendStatus = adxValue > 25 ? "trending" : adxValue < 20 ? "ranging" : "weak trend";
+//       const trendStatus = adxValue > 25 ? "trending" : adxValue < 20 ? "ranging" : "weak trend";
 
-      const description = `ADX: ${adxValue.toFixed(2)} (${strength.toLowerCase().replace("_", " ")}). +DI: ${plusDI.toFixed(2)}, -DI: ${minusDI.toFixed(2)}. Market is ${trendStatus}. ${
-        trend === "UPWARD"
-          ? "Bullish trend strength confirmed"
-          : trend === "DOWNWARD"
-          ? "Bearish trend strength confirmed"
-          : "No strong directional bias"
-      }.`;
+//       const description = `ADX: ${adxValue.toFixed(2)} (${strength.toLowerCase().replace("_", " ")}). +DI: ${plusDI.toFixed(2)}, -DI: ${minusDI.toFixed(2)}. Market is ${trendStatus}. ${
+//         trend === "UPWARD"
+//           ? "Bullish trend strength confirmed"
+//           : trend === "DOWNWARD"
+//           ? "Bearish trend strength confirmed"
+//           : "No strong directional bias"
+//       }.`;
 
-      return {
-        signal,
-        confidence,
-        description,
-        timestamp: candles[candles.length - 1].timestamp,
-        adxValue,
-        plusDI,
-        minusDI,
-        strength,
-        trend,
-        trendStrength: adxValue > 25 ? "STRONG" : adxValue > 20 ? "MODERATE" : "WEAK",
-      };
-    } catch (error) {
-      logger.error({ error, params }, "Error calculating ADX");
-      throw new Error(`Failed to calculate ADX: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
-  },
-});
+//       return {
+//         signal,
+//         confidence,
+//         description,
+//         timestamp: candles[candles.length - 1].timestamp,
+//         adxValue,
+//         plusDI,
+//         minusDI,
+//         strength,
+//         trend,
+//         trendStrength: adxValue > 25 ? "STRONG" : adxValue > 20 ? "MODERATE" : "WEAK",
+//       };
+//     } catch (error) {
+//       logger.error({ error, params }, "Error calculating ADX");
+//       throw new Error(`Failed to calculate ADX: ${error instanceof Error ? error.message : "Unknown error"}`);
+//     }
+//   },
+// });
 
 // Export all tools
 export const trendIndicatorTools = [
@@ -522,5 +526,5 @@ export const trendIndicatorTools = [
   macdTool,
   parabolicSarTool,
   aroonTool,
-  adxTool,
+  // adxTool,
 ];

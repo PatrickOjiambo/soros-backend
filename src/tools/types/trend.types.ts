@@ -20,6 +20,8 @@ export interface ExponentialMovingAverageResult extends BaseIndicatorResult {
   emaValue: number;
   pricePosition: "ABOVE_EMA" | "BELOW_EMA" | "AT_EMA";
   momentum: "ACCELERATING" | "DECELERATING" | "STEADY";
+  crossoverDetected: boolean;
+  responsiveness: string
 }
 
 /**
@@ -43,6 +45,7 @@ export interface ParabolicSARResult extends BaseIndicatorResult {
   currentPrice: number;
   position: "ABOVE_PRICE" | "BELOW_PRICE";
   reversalDetected: boolean;
+  stopLossLevel: number;
 }
 
 /**
@@ -52,7 +55,9 @@ export interface AroonIndicatorResult extends BaseIndicatorResult {
   trend: TrendDirection;
   aroonUp: number;
   aroonDown: number;
-  strength: "STRONG_UPTREND" | "STRONG_DOWNTREND" | "WEAK_TREND" | "NO_TREND";
+  strength: "VERY_STRONG" | "STRONG" | "MODERATE" | "WEAK";
+  oscillator: number;
+  crossover: "BULLISH" | "BEARISH" | "NONE";
 }
 
 /**

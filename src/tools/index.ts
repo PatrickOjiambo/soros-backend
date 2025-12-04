@@ -27,7 +27,6 @@ export {
   macdTool,
   parabolicSarTool,
   aroonTool,
-  adxTool,
 } from "./trend.indicators";
 
 // Export individual momentum tools

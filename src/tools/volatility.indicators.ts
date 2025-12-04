@@ -1,4 +1,4 @@
-import { createTool } from "@iqai/adk/tools";
+import { createTool } from "@iqai/adk";
 import { z } from "zod";
 import {
   atr,
@@ -47,9 +47,9 @@ export const atrTool = createTool({
       const { high, low, close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const atrValues = atr(period, high, low, close);
-      const atrValue = atrValues[atrValues.length - 1];
-      const previousATR = atrValues[atrValues.length - 2];
+      const atrValues = atr(high, low, close, {period});
+      const atrValue = atrValues.atrLine[atrValues.atrLine.length - 1];
+      const previousATR = atrValues.atrLine[atrValues.atrLine.length - 2];
       const currentPrice = close[close.length - 1];
       const percentOfPrice = (atrValue / currentPrice) * 100;
 
@@ -103,17 +103,16 @@ export const bollingerBandsTool = createTool({
   description: "Volatility bands around moving average. Price at upper band suggests overbought, at lower band suggests oversold. Squeeze indicates low volatility.",
   schema: z.object({
     period: z.number().min(5).max(50).default(20).describe("BB period"),
-    stdDev: z.number().default(2).describe("Standard deviation multiplier"),
     interval: z.enum(["1m", "5m", "15m", "1h", "4h", "1d"]).default("15m"),
   }),
   fn: async (params): Promise<BollingerBandsResult> => {
     try {
-      const { period, stdDev, interval } = params;
+      const { period, interval } = params;
       const limit = period + 50;
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const bb = bollingerBands(period, stdDev, close);
+      const bb = bollingerBands( close, { period,  } );
       const currentPrice = close[close.length - 1];
       const upperBand = bb.upper[bb.upper.length - 1];
       const middleBand = bb.middle[bb.middle.length - 1];
@@ -195,19 +194,19 @@ export const bollingerBandWidthTool = createTool({
   description: "Measures Bollinger Band width to identify volatility levels. Low bandwidth suggests squeeze and potential breakout.",
   schema: z.object({
     period: z.number().min(5).max(50).default(20).describe("BB period"),
-    stdDev: z.number().default(2).describe("Standard deviation multiplier"),
     interval: z.enum(["1m", "5m", "15m", "1h", "4h", "1d"]).default("15m"),
   }),
   fn: async (params): Promise<BollingerBandWidthResult> => {
     try {
-      const { period, stdDev, interval } = params;
+      const { period,  interval } = params;
       const limit = period + 50;
       const { close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
+      const bb = bollingerBands( close, { period,  } );
 
-      const bbw = bollingerBandsWidth(period, stdDev, close);
-      const bandwidthValue = bbw[bbw.length - 1];
-      const previousBBW = bbw[bbw.length - 2];
+      const bbw = bollingerBandsWidth( bb, { period  } );
+      const bandwidthValue = bbw.width[bbw.width.length - 1];
+      const previousBBW = bbw.width[bbw.width.length - 2];
 
       let volatility: VolatilityLevel = "MODERATE";
       if (bandwidthValue > 8) volatility = "VERY_HIGH";
@@ -267,17 +266,16 @@ export const keltnerChannelTool = createTool({
   schema: z.object({
     period: z.number().min(5).max(50).default(20).describe("EMA period"),
     atrPeriod: z.number().default(10).describe("ATR period"),
-    multiplier: z.number().default(2).describe("ATR multiplier"),
     interval: z.enum(["1m", "5m", "15m", "1h", "4h", "1d"]).default("15m"),
   }),
   fn: async (params): Promise<KeltnerChannelResult> => {
     try {
-      const { period, atrPeriod, multiplier, interval } = params;
+      const { period, atrPeriod,  interval } = params;
       const limit = Math.max(period, atrPeriod) + 50;
       const { high, low, close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const kc = keltnerChannel(period, atrPeriod, multiplier, high, low, close);
+      const kc = keltnerChannel(high, low, close, { period });
       const currentPrice = close[close.length - 1];
       const upperChannel = kc.upper[kc.upper.length - 1];
       const middleChannel = kc.middle[kc.middle.length - 1];
@@ -365,7 +363,7 @@ export const donchianChannelTool = createTool({
       const { high, low, close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const dc = donchianChannel(period, high, low);
+      const dc = donchianChannel(close, { period });
       const currentPrice = close[close.length - 1];
       const upperChannel = dc.upper[dc.upper.length - 1];
       const middleChannel = dc.middle[dc.middle.length - 1];
@@ -436,17 +434,16 @@ export const chandelierExitTool = createTool({
   description: "Provides trailing stop-loss levels based on ATR. Helps manage risk and protect profits in trending markets.",
   schema: z.object({
     period: z.number().min(5).max(50).default(22).describe("ATR period"),
-    multiplier: z.number().default(3).describe("ATR multiplier"),
     interval: z.enum(["1m", "5m", "15m", "1h", "4h", "1d"]).default("15m"),
   }),
   fn: async (params): Promise<ChandelierExitResult> => {
     try {
-      const { period, multiplier, interval } = params;
+      const { period,  interval } = params;
       const limit = period + 50;
       const { high, low, close } = await getOHLCArrays(interval, limit);
       const candles = await getMarketData(interval, limit);
 
-      const ce = chandelierExit(period, multiplier, high, low, close);
+      const ce = chandelierExit( high, low, close, { period });
       const longExit = ce.long[ce.long.length - 1];
       const shortExit = ce.short[ce.short.length - 1];
       const currentPrice = close[close.length - 1];
@@ -455,8 +452,8 @@ export const chandelierExitTool = createTool({
       if (currentPrice < longExit) exitSignal = "LONG_EXIT";
       else if (currentPrice > shortExit) exitSignal = "SHORT_EXIT";
 
-      const atrValues = atr(period, high, low, close);
-      const currentATR = atrValues[atrValues.length - 1];
+      const atrValues = atr( high, low, close, {period});
+      const currentATR = atrValues.atrLine[atrValues.atrLine.length - 1];
       const atrPercent = (currentATR / currentPrice) * 100;
       let volatility: VolatilityLevel = "MODERATE";
       if (atrPercent > 5) volatility = "VERY_HIGH";
