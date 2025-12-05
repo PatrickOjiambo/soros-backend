@@ -407,3 +407,267 @@ tradeSchema.index({ createdAt: -1 });
 tradeSchema.index({ status: 1, createdAt: -1 });
 
 export const Trade = mongoose.model<ITrade>("Trade", tradeSchema);
+
+/**
+ * Treasury Interface
+ * 
+ * Tracks the balance allocated to each trading strategy
+ * Provides a single source of truth for strategy funding
+ */
+export interface ITreasury extends Document {
+  strategyId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  
+  // Balance tracking
+  totalDeposited: number; // Total WETH deposited to this strategy
+  totalWithdrawn: number; // Total WETH withdrawn from this strategy
+  availableBalance: number; // Current available balance (totalDeposited - totalWithdrawn + profits - losses)
+  lockedBalance: number; // Balance locked in active trades
+  
+  // Profit/Loss tracking
+  totalProfits: number; // Cumulative profits from closed trades
+  totalLosses: number; // Cumulative losses from closed trades
+  netProfitLoss: number; // totalProfits - totalLosses
+  
+  // Blockchain tracking
+  contractAddress: string; // EVM contract address
+  lastDepositTxHash?: string; // Last deposit transaction hash
+  lastWithdrawTxHash?: string; // Last withdrawal transaction hash
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Treasury Schema
+ */
+const treasurySchema = new Schema<ITreasury>(
+  {
+    strategyId: {
+      type: Schema.Types.ObjectId,
+      ref: "Strategy",
+      required: [true, "Strategy ID is required"],
+      unique: true, // One treasury per strategy
+      index: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "User ID is required"],
+      index: true,
+    },
+    totalDeposited: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: [0, "Total deposited cannot be negative"],
+    },
+    totalWithdrawn: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: [0, "Total withdrawn cannot be negative"],
+    },
+    availableBalance: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: [0, "Available balance cannot be negative"],
+    },
+    lockedBalance: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: [0, "Locked balance cannot be negative"],
+    },
+    totalProfits: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: [0, "Total profits cannot be negative"],
+    },
+    totalLosses: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: [0, "Total losses cannot be negative"],
+    },
+    netProfitLoss: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    contractAddress: {
+      type: String,
+      required: [true, "Contract address is required"],
+      trim: true,
+      validate: {
+        validator: function (v: string) {
+          return /^0x[a-fA-F0-9]{40}$/.test(v);
+        },
+        message: "Invalid Ethereum address format",
+      },
+    },
+    lastDepositTxHash: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function (v: string) {
+          return /^0x[a-fA-F0-9]{64}$/.test(v);
+        },
+        message: "Invalid transaction hash format",
+      },
+    },
+    lastWithdrawTxHash: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function (v: string) {
+          return /^0x[a-fA-F0-9]{64}$/.test(v);
+        },
+        message: "Invalid transaction hash format",
+      },
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// Compound indexes for efficient queries
+treasurySchema.index({ userId: 1, availableBalance: -1 });
+treasurySchema.index({ strategyId: 1 }, { unique: true });
+
+export const Treasury = mongoose.model<ITreasury>("Treasury", treasurySchema);
+
+/**
+ * Transaction Interface
+ * 
+ * Complete audit trail for all treasury operations
+ * Immutable record of every balance change
+ */
+export interface ITransaction extends Document {
+  userId: mongoose.Types.ObjectId;
+  strategyId: mongoose.Types.ObjectId;
+  treasuryId: mongoose.Types.ObjectId;
+  
+  type: "DEPOSIT" | "WITHDRAW" | "TRADE_OPEN" | "TRADE_CLOSE" | "PROFIT" | "LOSS" | "REFUND" | "ADJUSTMENT";
+  amount: number;
+  
+  // Balance snapshots (for reconciliation)
+  balanceBefore: number;
+  balanceAfter: number;
+  
+  // References
+  tradeId?: mongoose.Types.ObjectId; // If related to a trade
+  txHash?: string; // Blockchain transaction hash
+  
+  // Metadata
+  description: string;
+  metadata?: Record<string, any>; // Flexible field for additional data
+  
+  status: "PENDING" | "COMPLETED" | "FAILED" | "REVERSED";
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Transaction Schema
+ */
+const transactionSchema = new Schema<ITransaction>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "User ID is required"],
+      index: true,
+    },
+    strategyId: {
+      type: Schema.Types.ObjectId,
+      ref: "Strategy",
+      required: [true, "Strategy ID is required"],
+      index: true,
+    },
+    treasuryId: {
+      type: Schema.Types.ObjectId,
+      ref: "Treasury",
+      required: [true, "Treasury ID is required"],
+      index: true,
+    },
+    type: {
+      type: String,
+      required: [true, "Transaction type is required"],
+      enum: {
+        values: ["DEPOSIT", "WITHDRAW", "TRADE_OPEN", "TRADE_CLOSE", "PROFIT", "LOSS", "REFUND", "ADJUSTMENT"],
+        message: "Invalid transaction type",
+      },
+      index: true,
+    },
+    amount: {
+      type: Number,
+      required: [true, "Amount is required"],
+      validate: {
+        validator: function (v: number) {
+          return v !== 0;
+        },
+        message: "Amount cannot be zero",
+      },
+    },
+    balanceBefore: {
+      type: Number,
+      required: [true, "Balance before is required"],
+      min: [0, "Balance cannot be negative"],
+    },
+    balanceAfter: {
+      type: Number,
+      required: [true, "Balance after is required"],
+      min: [0, "Balance cannot be negative"],
+    },
+    tradeId: {
+      type: Schema.Types.ObjectId,
+      ref: "Trade",
+    },
+    txHash: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function (v: string) {
+          return /^0x[a-fA-F0-9]{64}$/.test(v);
+        },
+        message: "Invalid transaction hash format",
+      },
+    },
+    description: {
+      type: String,
+      required: [true, "Description is required"],
+      trim: true,
+      maxlength: [500, "Description cannot exceed 500 characters"],
+    },
+    metadata: {
+      type: Schema.Types.Mixed,
+    },
+    status: {
+      type: String,
+      required: [true, "Status is required"],
+      enum: {
+        values: ["PENDING", "COMPLETED", "FAILED", "REVERSED"],
+        message: "Invalid status",
+      },
+      default: "COMPLETED",
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// Compound indexes for efficient queries
+transactionSchema.index({ userId: 1, createdAt: -1 });
+transactionSchema.index({ strategyId: 1, type: 1, createdAt: -1 });
+transactionSchema.index({ treasuryId: 1, createdAt: -1 });
+transactionSchema.index({ type: 1, status: 1, createdAt: -1 });
+transactionSchema.index({ txHash: 1 }, { sparse: true });
+
+export const Transaction = mongoose.model<ITransaction>("Transaction", transactionSchema);
