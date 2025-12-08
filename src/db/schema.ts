@@ -263,8 +263,8 @@ const strategySchema = new Schema<IStrategy>(
 );
 
 // Indexes for efficient queries
-strategySchema.index({ userId: 1, status: 1 });
-strategySchema.index({ createdAt: -1 });
+// strategySchema.index({ userId: 1, status: 1 });
+// strategySchema.index({ createdAt: -1 });
 
 export const Strategy = mongoose.model<IStrategy>("Strategy", strategySchema);
 
