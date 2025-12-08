@@ -1,12 +1,17 @@
 import app from "./app";
 import { env } from "./env";
 import { connectDB, closeDBConnection } from "./db";
+import { startStrategyAnalysisCron, stopAllCronJobs } from "./workers/cron";
+
 const port = env.PORT;
 
 const startServer = async () => {
   try {
     await connectDB();
     console.log("Database connected successfully.");
+
+    // Start cron jobs
+    startStrategyAnalysisCron();
 
     const server = app.listen(port, () => {
 
@@ -25,6 +30,10 @@ const startServer = async () => {
 
     const gracefulShutdown = async (signal: string) => {
       console.log(`\nReceived ${signal}. Closing connections gracefully...`);
+      
+      // Stop cron jobs
+      stopAllCronJobs();
+      
       server.close(async () => {
         console.log("HTTP server closed.");
         await closeDBConnection();
