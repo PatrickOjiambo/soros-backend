@@ -50,7 +50,7 @@ export const validatorAgent = new LlmAgent({
   description: "Validates market analysis and makes final trading decisions with risk assessment",
   
   // Use GPT-4o for critical decision-making
-  model: "gpt-4o",
+  model: "gemini-2.5-flash",
   
   instruction: `You are the final decision-maker in the trading pipeline. Your responsibility is to validate the market analysis and determine whether a trade should be executed.
 

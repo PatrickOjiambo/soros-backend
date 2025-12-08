@@ -45,7 +45,7 @@ export const analyzerAgent = new LlmAgent({
   description: "Analyzes WETHUSDT market using technical indicators and provides comprehensive trading insights",
   
   // Use GPT-4o for advanced tool selection and analysis
-  model: "gpt-4o",
+  model: "gemini-2.5-flash",
   
   instruction: `You are an expert technical analyst for cryptocurrency trading. Your role is to:
 

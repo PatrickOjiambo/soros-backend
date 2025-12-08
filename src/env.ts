@@ -13,6 +13,7 @@ const envSchema = z.object({
   EMAIL_SERVER_USER: z.string().min(1),
   EMAIL_SERVER_PASSWORD: z.string().min(1),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
+  GOOGLE_API_KEY: z.string().min(1, "GEMINI_API_KEY is required"),
 });
 
 try {

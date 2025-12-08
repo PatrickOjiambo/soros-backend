@@ -3,6 +3,7 @@ import ExampleEmail from "./templates/example";
 import VerifyEmail from "./templates/verify-email";
 import ResetPasswordEmail from "./templates/reset-password";
 import TopUpTreasury from "./templates/top-up-tokens";
+import TradeAnalysisEmail from "./templates/trade-analysis";
 import "dotenv/config";
 import logger from "../lib/logger";
 
@@ -63,6 +64,52 @@ export class EmailService {
     } catch (error) {
       logger.error(
         `Error sending reset password email to ${to}: ${(error as Error).message}`,
+      );
+      throw error;
+    }
+  }
+  async tradeAnalysisEmail(
+    to: string,
+    analysisData: {
+      strategyName: string;
+      decision: "EXECUTE" | "HOLD" | "REJECT";
+      signal: "BUY" | "SELL" | "HOLD";
+      confidence: string;
+      reasoning: string;
+      marketCondition: string;
+      trendAnalysis: string;
+      momentumAnalysis: string;
+      volatilityAnalysis: string;
+      volumeAnalysis: string;
+      keyInsights: string[];
+      warnings: string[];
+      validationChecks: {
+        strategyAlignment: boolean;
+        riskAcceptable: boolean;
+        marketConditionsFavorable: boolean;
+        sufficientConfidence: boolean;
+      };
+      timestamp: string;
+    }
+  ) {
+    try {
+      const valid = this.validateEmailAddress(to);
+      if (!valid) {
+        throw new Error("Invalid email address");
+      }
+      const analysisResult = await sendEmail({
+        to,
+        subject: `Trade Analysis: ${analysisData.strategyName} - ${analysisData.decision}`,
+        react: TradeAnalysisEmail(analysisData),
+      });
+      if (!analysisResult.success) {
+        throw (
+          analysisResult.error ?? new Error("Failed to send trade analysis email")
+        );
+      }
+    } catch (error) {
+      logger.error(
+        `Error sending trade analysis email to ${to}: ${(error as Error).message}`,
       );
       throw error;
     }

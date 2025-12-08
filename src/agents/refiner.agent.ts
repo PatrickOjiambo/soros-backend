@@ -43,7 +43,7 @@ export const refinerAgent = new LlmAgent({
   description: "Refines trading strategies into structured, executable steps that AI agents can understand and execute",
   
   // Use GPT-4o for advanced reasoning
-  model: "gpt-4o",
+  model: "gemini-2.5-flash",
   
   instruction: `You are an expert trading strategy analyst specializing in breaking down trading strategies into clear, executable steps.
 

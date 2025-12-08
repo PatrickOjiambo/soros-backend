@@ -20,7 +20,8 @@
     "studio": "pnpm drizzle-kit studio",
     "test": "jest",
     "email": "email dev --dir src/lib/emails/templates -p 3001",
-    "seed": "tsx src/db/seed.ts"
+    "seed": "tsx src/db/seed.ts",
+    "simulate": "tsx src/scripts/simulate-trade-analysis.ts"
   },
   "dependencies": {
     "@iqai/adk": "^0.5.7",

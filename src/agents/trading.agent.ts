@@ -114,7 +114,7 @@ export async function executeTradingPipeline(
 
     // Build and run the agent
     const { runner } = await AgentBuilder.create()
-      .withModel("gpt-4o") // GPT-4o for all agents
+      .withModel("gemini-2.5-flash") // GPT-4o for all agents
       .withAgent(tradingAgent)
       .build();
 
@@ -155,7 +155,7 @@ export async function executeTradingPipelineWithState(
     const { AgentBuilder } = await import("@iqai/adk");
 
     const { runner, session } = await AgentBuilder.create()
-      .withModel("gpt-4o")
+      .withModel("gemini-2.5-flash")
       .withAgent(tradingAgent)
       .build();
 
