@@ -78,3 +78,4 @@ dist
 
 # Except README.md
 !README.md
+.vercel
