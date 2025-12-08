@@ -24,8 +24,9 @@ export const createStrategySchema = z.object({
   }),
   amount: z
     .number()
-    .positive("Amount must be positive")
-    .min(1, "Amount must be at least 1"),
+    .default(0),
+    // .positive("Amount must be positive")
+    // .min(1, "Amount must be at least 1"),
 });
 
 export const updateStrategySchema = z.object({

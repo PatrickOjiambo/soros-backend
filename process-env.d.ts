@@ -9,6 +9,7 @@ declare global {
             EMAIL_SERVER_PORT: string;
             EMAIL_SERVER_USER: string;
             EMAIL_SERVER_PASSWORD: string;
+            OPENAI_API_KEY: string
         }
     }
 }

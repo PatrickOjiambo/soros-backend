@@ -12,6 +12,7 @@ const envSchema = z.object({
   EMAIL_SERVER_PORT: z.coerce.number(),
   EMAIL_SERVER_USER: z.string().min(1),
   EMAIL_SERVER_PASSWORD: z.string().min(1),
+  OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
 });
 
 try {

@@ -240,13 +240,13 @@ const strategySchema = new Schema<IStrategy>(
     amount: {
       type: Number,
       required: [true, "Amount is required"],
-      min: [1, "Amount must be at least 1"],
-      validate: {
-        validator: function (v: number) {
-          return v > 0;
-        },
-        message: "Amount must be positive",
-      },
+      // min: [1, "Amount must be at least 1"],
+      // validate: {
+      //   validator: function (v: number) {
+      //     return v > 0;
+      //   },
+      //   message: "Amount must be positive",
+      // },
     },
     status: {
       type: String,
