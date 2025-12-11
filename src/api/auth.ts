@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction, Router } from "express";
 import { z } from "zod";
 import { AuthService, signupSchema, loginSchema } from "../lib/auth";
-import { authenticate } from "../middlewares";
+import { authenticate, authLimiter } from "../middlewares";
 import logger from "../lib/logger";
 
 const router: Router = express.Router();
@@ -10,7 +10,7 @@ const router: Router = express.Router();
  * POST /api/v1/auth/signup
  * Register a new user
  */
-router.post("/signup", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/signup", authLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Validate request body
     const validatedData = signupSchema.parse(req.body);
@@ -72,7 +72,7 @@ router.post("/signup", async (req: Request, res: Response, next: NextFunction) =
  * POST /api/v1/auth/login
  * Login user with email and password
  */
-router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
+router.post("/login", authLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Validate request body
     const validatedData = loginSchema.parse(req.body);

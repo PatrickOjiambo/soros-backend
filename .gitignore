@@ -57,6 +57,11 @@ typings/
 # dotenv environment variables file
 .env
 
+# Environment setup scripts (contain secrets)
+setup-env.sh
+add-env-vars.sh
+*.env.sh
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 

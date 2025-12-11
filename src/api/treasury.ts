@@ -21,9 +21,12 @@ import {
     initializeTreasury,
 } from "../services/treasury.service";
 import logger from "../lib/logger";
-import { authenticate, AuthRequest } from "../middlewares";
+import { authenticate, AuthRequest, treasuryLimiter } from "../middlewares";
 
 const router: Router = Router();
+
+// Apply treasury-specific rate limiter to all routes
+router.use(treasuryLimiter);
 
 /**
  * Validation Schemas

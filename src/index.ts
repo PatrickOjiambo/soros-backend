@@ -11,7 +11,7 @@ const startServer = async () => {
     console.log("Database connected successfully.");
 
     // Start cron jobs
-    startStrategyAnalysisCron();
+    // startStrategyAnalysisCron();
 
     const server = app.listen(port, () => {
 

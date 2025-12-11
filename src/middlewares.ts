@@ -6,6 +6,8 @@ import { env } from "./env";
 import { AuthService } from "./lib/auth";
 import logger from "./lib/logger";
 
+export * from './middlewares/rate-limiter';
+
 /**
  * Extended Request interface to include user data
  */

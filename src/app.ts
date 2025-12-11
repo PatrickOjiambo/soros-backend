@@ -12,8 +12,11 @@ const app: Express = express();
 
 app.use(morgan("dev"));
 app.use(helmet());
-app.use(cors({origin: "*"}));
+app.use(cors({origin: ["https://agentarena.soros.space", "http://localhost:8080"]}));
 app.use(express.json());
+
+// Apply general rate limiter to all API routes
+app.use("/api", middlewares.apiLimiter);
 
 app.get<object, MessageResponse>("/", (req, res) => {
   res.json({
